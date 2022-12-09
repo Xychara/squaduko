@@ -9,16 +9,16 @@ class databaseService {
 
   add(key,value) {
     return db.set({
-      key: value,
-    })
-    .then(()=>console.log('Data added.'));
+      [key]: value,
+    });
+    // .then(()=>console.log('Data added.'));
   }
 
   update(key, value) {
     return db.update({
-      key: value,
-    })
-    .then(()=>console.log('Data updated.'));
+      [key]: value,
+    });
+    // .then(()=>console.log('Data updated: ' + key));
   }
 
   delete(key) {

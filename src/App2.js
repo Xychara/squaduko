@@ -22,11 +22,10 @@ const Board = () => {
   useEffect(()=>{
     
     function onDataChange(items) {
-      items.forEach((item) => {
-        if(item.key === "selected") setSelected(item.val());
-        if(item.key === "board_vals") setBoard_vals(item.val());
-        if(item.key === "board_notes") setBoard_notes(item.val());
-      });
+      // console.log("Discovered data: ", items.val());
+      setSelected(items.val()["selected"]);
+      setBoard_vals(items.val()["board_vals"]);
+      setBoard_notes(items.val()["board_notes"]);
     }
 
     databaseService.getAll().on("value", onDataChange);
@@ -61,8 +60,8 @@ const Board = () => {
     function changeBoard(val,index) {
       const temp = [...board_vals];
       temp[index] = temp[index] === val ? 0 : val;
-      setBoard_vals(temp);
-      databaseService.update("board_vals",board_vals);
+      // setBoard_vals(temp);
+      databaseService.update("board_vals",temp);
     }
 
     function changeNotes(val,index) {
@@ -71,12 +70,12 @@ const Board = () => {
         // val in current ? add val : remove val;
         const current = temp[index];
         temp[index] = stringHas(current,val) ? current.replace(val,'') : current+val;
-        setBoard_notes(temp);
+        // setBoard_notes(temp);
       } else { //0 => clear
         temp[index] = "";
-        setBoard_notes(temp);
+        // setBoard_notes(temp);
       }
-      databaseService.update("board_notes",board_notes);
+      databaseService.update("board_notes",temp);
     }
 
     function handleDigit(event) {
@@ -102,8 +101,8 @@ const Board = () => {
 
   function toggleSelected(index) {
     // console.log(index + " :index|selected: " + selected);
-    setSelected(selected===index ? -2 : index);
-    databaseService.update("selected",selected);
+    // setSelected(selected===index ? -2 : index);
+    databaseService.update("selected",selected===index ? -2 : index);
   }
 
   const Cells = board_vals.map((val,index) => (
