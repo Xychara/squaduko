@@ -3,19 +3,36 @@
   display: flex;
   justify-content: center;
   text-align: center;
+
+  /*Preventing text selection*/
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+      -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+
+  /* disable s scroll */
+  overflow-x: hidden;
+}
+
+.board-container {
+  display: flex;
+  flex-direction: row;
+  padding-left: 2vmin;
 }
 
 .cell-grid {
   display: grid;
   grid-template: repeat(9,10vmin) / repeat(9,10vmin);
-}
-
+} /* 10vmin if horiz, 8 if verti */
 
 .cell:nth-child(3n) {
-  border-right: 3px solid #4a4a4a;
+  border-right: .5vmin solid #4a4a4a;
 }
 .cell:nth-child(3n+1) {
-  border-left: 3px solid #4a4a4a;
+  border-left: .5vmin solid #4a4a4a;
 }
 .cell:nth-child(27n+1),
 .cell:nth-child(27n+2),
@@ -26,7 +43,7 @@
 .cell:nth-child(27n+7),
 .cell:nth-child(27n+8),
 .cell:nth-child(27n+9) {
-  border-top: 3px solid #4a4a4a;
+  border-top: .5vmin solid #4a4a4a;
 }
 .cell:nth-last-child(27n+1),
 .cell:nth-last-child(27n+2),
@@ -37,26 +54,26 @@
 .cell:nth-last-child(27n+7),
 .cell:nth-last-child(27n+8),
 .cell:nth-last-child(27n+9) {
-  border-bottom: 3px solid #4a4a4a;
+  border-bottom: .5vmin solid #4a4a4a;
 }
 .cell:nth-child(9n) {
-  border-right: 6px solid #4a4a4a;
+  border-right: 1vmin solid #4a4a4a;
 }
 .cell:nth-child(9n+1) {
-  border-left: 6px solid #4a4a4a;
+  border-left: 1vmin solid #4a4a4a;
 }
 .cell:nth-child(-n+9) {
-  border-top: 6px solid #4a4a4a;
+  border-top: 1vmin solid #4a4a4a;
 }
 .cell:nth-last-child(-n+9) {
-  border-bottom: 6px solid #4a4a4a;
+  border-bottom: 1vmin solid #4a4a4a;
 }
 
 .cell {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #3d4abe;
+  color: #8fbcff;
   font-size: 6vmin;
   font-family: monospace;
   border: 1px solid #4a4a4a;
@@ -64,7 +81,20 @@
 }
 
 .selected {
-  background-color: rgb(0, 153, 255);
+  background-color: rgba(0, 133, 221, 0.8);
+  /* outline: 5px solid blue;
+  outline-offset: -5px; if i wanna do somthing like that, for now leaving*/ 
+}
+
+.note { 
+  color: rgb(200, 200, 200);
+  font-size: 2.5vmin;
+}
+
+.center {
+  color: rgb(200, 200, 200);
+  /* inset: 4vmin; DOES THIS DO SOMETHING??? */ 
+  font-size: 2.5vmin;
 }
 
 .given {
@@ -72,7 +102,7 @@
 }
 
 .equiv {
-  background-color: rgb(119, 201, 255);
+  background-color: rgba(119, 201, 255, 0.3);
 }
 
 .highlighted {
@@ -84,7 +114,319 @@
   grid-template: repeat(3,2.75vmin) / repeat(3,2.75vmin);
 }
 
-.note { 
-  color: rgb(150, 150, 150);
-  font-size: 2.5vmin;
+.mistake { /* For detected errors */
+  color: red;
+}
+
+
+/* COLORSSSSSS */
+
+.red {
+  background-color: rgba(255, 0, 0, 0.7);
+}
+
+.orange {
+  background-color: rgba(255, 166, 0, 0.7);
+}
+
+.yellow {
+  background-color: rgba(255, 255, 0, 0.7);
+}
+
+.green {
+  background-color: rgba(0, 128, 0, 0.7);
+}
+
+.forestgreen {
+  background-color: rgba(34, 139, 34, 0.7);
+}
+
+.blue {
+  background-color: rgba(0, 0, 139, 0.7);
+}
+
+.purple {
+  background-color: rgba(128, 0, 128, 0.7);
+}
+
+.periwinkle { /* fix colorrrrr */
+  background-color: rgba(128, 60, 128, 0.7);
+}
+
+.white {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+/* BUTTONSSSSS */
+
+.buttons {
+  padding-left: 5vmin;
+  padding-right: 2vmin;
+  padding-top: 20px;
+  padding-bottom: 1px;
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  justify-content: center;
+  align-items: center;
+  font-family: monospace;
+  color: #8fbcff;
+}
+
+.NumberButtons {
+  display: grid;
+  align-items: center;
+  grid-template: repeat(3,10.5vmin) / repeat(3,10.5vmin);
+  font-size: 7vmin;
+  background-color: rgb(20,20,20);
+}
+
+.num-button {
+  display: flex;
+  min-height: 80%;
+  padding: 1vmin;
+  border: 1px solid #4a4a4a;
+  justify-content: center; 
+  align-items: center;
+}
+
+.num-button:hover { /* while mouse is over a button */
+  background-color: rgba(100, 100, 100,.5);
+  transition: .2s;
+}
+
+.center:nth-child(-n+3) {
+  align-items: flex-end;
+}
+.center:nth-child(n+7) {
+  align-items: flex-start;
+}
+.center:nth-child(3n+1) {
+  justify-content: flex-end;
+}
+.center:nth-child(3n+3) {
+  justify-content: flex-start;
+}
+
+.note:nth-child(-n+3) {
+  align-items: flex-start;
+}
+.note:nth-child(n+7) {
+  align-items: flex-end;
+}
+.note:nth-child(3n+1) {
+  justify-content: flex-start;
+}
+.note:nth-child(3n+3) {
+  justify-content: flex-end;
+}
+
+.color-mode { /* for num-buttons when colorMode is on */
+  font-size: 0;
+  border-radius: 5px;
+}
+
+.StateButtons {
+  display: grid;
+  grid-template: repeat(5,5vmin) / repeat(1,1fr);
+  color: white;
+  font-size: 3vmin;
+  background-color: rgb(20,20,20);
+}
+
+.state-button {
+  display: flex;
+  justify-content: center; 
+  align-items: center;
+  padding: 5px;
+  border: 1px solid #4a4a4a;
+}
+
+.state-button:hover { /* while mouse is over a button */
+  background-color: rgba(100, 100, 100,.5);
+  transition: .2s;
+}
+
+.on { /* toggled on buttons */
+  background-color: rgb(100, 100, 100);
+}
+
+
+
+.options-button {  /* somehow make this just the bottom right/top right corner or smth */
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 3px;
+  font-size: 15px;
+  color: grey;
+}
+
+.options-button:hover { /* while mouse is over a button */
+  background-color: rgba(100, 100, 100,.5);
+  transition: .2s;
+}
+
+.options-overlay {
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  z-index:1;
+  left:0;
+  bottom:0;
+  color: white;
+  background-color: rgba(30, 30, 30, 0.7);
+}
+
+.options-menu-text {
+  font-size: 6vmin;
+}
+
+.options-menu-button {
+  padding: 8px;
+  font-size: 4vmin;
+}
+
+.options-menu-button:hover {
+  background-color: rgba(100,100,100,.5);
+  transition: .2s;
+}
+
+.option-on {
+  background-color: rgba(0, 200, 0, 0.7);
+}
+
+.options-close-button {
+  position: absolute;
+  top: 5px;
+  right: 30px;
+  width: 7vmin;
+  height: 7vmin;
+  font-size: 5vmin;
+}
+.options-close-button:hover {
+  background-color: rgba(100,100,100,.5);
+  transition: .2s;
+}
+
+/* Players */
+.players-container {
+  display: flex;
+  width: 1275px;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 10px;
+  flex-direction: row;
+  color: white;
+}
+
+
+/* Layout change based on screen size */
+
+@media screen and (max-width: 1300px) {
+  .buttons {
+    padding-left: 3vmax;
+  }
+  .cell-grid {
+    grid-template: repeat(9,7vmax) / repeat(9,7vmax);
+  }
+  .cell {
+    font-size: 4vmax;
+  }
+  .note {
+    font-size: 1.5vmax;
+  }
+  .subgrid {
+    grid-template: repeat(3,2vmax) / repeat(3,2vmax);
+  }
+  .center {
+    font-size: 1.5vmax;
+  }
+  .NumberButtons {
+    font-size: 5vmax;
+    grid-template: repeat(3,7.5vmax) / repeat(3,7.5vmax);
+  }
+  .StateButtons {
+    font-size: 2.25vmax;
+  }
+  .num-button {
+    padding: .675vmax;
+  }
+  .players-container {
+    width: 98vw;
+  }
+}
+
+@media screen and (max-width: 1000px) {
+  .buttons {
+    padding-left: 0px;
+    padding-right: 0px;
+  }
+  .board-container {
+    flex-direction: column;
+  }
+  .cell-grid {
+    grid-template: repeat(9,65px) / repeat(9,65px);
+    padding-left: 0;
+  }
+  .cell {
+    font-size: 40px;
+  }
+  .note {
+    font-size: 16px;
+  }
+  .subgrid {
+    grid-template: repeat(3,18px) / repeat(3,18px);
+  }
+  .center {
+    font-size: 16px;
+  }
+  .NumberButtons {
+    font-size: 45.5px;
+    grid-template: repeat(3,68.25px) / repeat(3,68.25px);
+  }
+  .StateButtons {
+    font-size: 19.5px;
+    grid-template: repeat(5,32.5px) / repeat(1,1fr);
+  }
+  .num-button {
+    padding: 6.5px;
+  }
+  .players-container {
+    width: 585px;
+  }
+}
+
+
+@media screen and (max-width: 650px) {
+  .cell-grid {
+    grid-template: repeat(9,10vmin) / repeat(9,10vmin);
+  }
+  .cell {
+    font-size: 6vmin;
+  }
+  .note {
+    font-size: 2.5vmin;
+  }
+  .subgrid {
+    grid-template: repeat(3,2.75vmin) / repeat(3,2.75vmin);
+  }
+  .center {
+    font-size: 2.5vmin;
+  }
+  .NumberButtons {
+    font-size: 7vmin;
+    grid-template: repeat(3,10.5vmin) / repeat(3,10.5vmin);
+  }
+  .StateButtons {
+    font-size: 3vmin;
+    grid-template: repeat(5,5vmin) / repeat(1,1fr);
+  }
+  .num-button {
+    padding: 1vmin;
+  }
+  .players-container {
+    width: 90vw;
+  }
 }

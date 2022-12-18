@@ -2,21 +2,189 @@ import './App2.css';
 import React, {useEffect, useState} from 'react';
 import databaseService from "./databaseService.js";
 
-function stringHas(string,char) {
-  return string.indexOf(char)!==-1;
+function arrHas(arr,char) {
+  return arr.indexOf(char)!==-1;
 }
 
-const NoteGrid = (notes) => (
-  <div className='subgrid'>
-    {Array(9).fill(0).map((e,index) => 
-      (<div className='note'>{stringHas(notes,index+1) ? index+1 : ""}</div>))}
-  </div>
-);
+var colorDict = {
+  0: "",
+  1: " red",
+  2: " orange",
+  3: " yellow",
+  4: " green",
+  5: " forestgreen",
+  6: " blue",
+  7: " purple",
+  8: " periwinkle",
+  9: " white"
+}
+
+const NoteGrid = (loc, notes, centers) => {
+
+  function constructSubgrid() {
+    const sorted = notes.split("").sort((a,b)=>parseInt(a)-parseInt(b));
+    var result = Array(9).fill(0);
+    result[4] = centers; //make this just first 4 or so
+    var locs = [];
+    if (sorted.length<=4) { //1-4
+      locs = [0,2,6,8];
+    } else if (sorted.length<=6) { // 4-6
+      locs = [0,1,2,6,7,8];
+    } else if (sorted.length===9&&centers.length === 0) { // 9, but prioritize centers
+      locs = [0,1,2,3,4,5,6,7,8];
+    } else { // 6-8 or 9 w/centers
+      locs = [0,1,2,3,5,6,7,8];
+    }
+    
+    for (var i=0; i<sorted.length&&i<locs.length; i++) {
+      result[locs[i]] = sorted[i];
+    }
+    return result;
+  }
+  
+  return (
+    <div className='subgrid'>
+      {constructSubgrid().map((e,index) => 
+        (<div key={loc + 'notes_subgrid' + index} className={index === 4 && centers.length>0 ? 'center' : 'note'}>{e===0? "" : e}</div>))}
+    </div>
+  );
+}
+
+// const OLDNOTEGRID = (loc, notes) => ( 
+//   <div className='corner-subgrid'>
+//     {Array(9).fill(0).map((e,index) => 
+//       (<div key={loc + 'corners_subgrid' + index} className='corner'>{index+1}</div>))}
+//   </div>
+// );
 
 const Board = () => {
-  const [selected, setSelected] = useState(-2);  
+  //Stored info
+  const [selected, setSelected] = useState({"":[]}); 
   const [board_vals, setBoard_vals] = useState(new Array(81).fill(0));
   const [board_notes, setBoard_notes] = useState(new Array(81).fill(""));
+  const [board_colors, setBoard_colors] = useState(new Array(81).fill(0));
+  const [board_centers, setBoard_centers] = useState(new Array(81).fill(""));
+  const [colors, setColors] = useState({"":""});
+
+  function colorToText(color) {
+    const temp = color.split(/ /);
+    return ("rgba(" + temp[0] + "," + temp[1] + "," + temp[2] + ",0.7)")
+  }
+
+  //Mode
+  const [mode, setMode] = useState(0);
+  // 0 => normal
+  // 1 => notes/corner
+  // 2 => center
+  // 3 => color
+  // 4 => given
+
+  //Keyboard/mouse info
+  const [mousedown, setMousedown] = useState(false);
+  const [adding, setAdding] = useState(true);
+
+  //Options + local info
+  const [optionsMenu, setOptionsMenu] = useState(false); //display options menu or not
+  const [highlightSoduko, setHighlightSoduko] = useState(false); //same row/col/box
+  const [highlightMatching, setHighlightMatching] = useState(true); //same #
+  const [showContradiction, setShowContradiction] = useState(true); //errors in red
+  const [showButtons, setShowButtons] = useState(true); //show input buttons
+  const [showPlayers, setShowPlayers] = useState(true); //show current players in their colors
+
+  const [name, setName] = useState("");
+
+  //Local info + state modifier functions
+  function changeHighlightSoduko(to) {
+    setHighlightSoduko(to);
+    localStorage.highlightSoduko = to;
+  }
+
+  function changeHighlightMatching(to) {
+    setHighlightMatching(to);
+    localStorage.highlightMatching = to;
+  }
+
+  function changeShowContradiction(to) {
+    setShowContradiction(to);
+    localStorage.showContradiction = to;
+  }
+
+  function changeShowButtons(to) {
+    setShowButtons(to);
+    localStorage.showButtons = to;
+  }
+
+  function changeShowPlayers(to) {
+    setShowPlayers(to);
+    localStorage.showPlayers = to;
+  }
+
+  //need some kind of func for setting name
+  function changeName(input) {
+    var tempN = "";
+    if (input!=="null"&&input!=="undefined"&&input!==null&&input!==undefined) tempN = input;
+    else {
+      while (tempN === "" || tempN === "undefined" || tempN === "null" || tempN === undefined || tempN === null) {
+        tempN = prompt("Enter your name: ");
+      }
+    }
+    
+    const tempS = {...selected};
+    delete tempS[name];
+    tempS[tempN] = selected[name]; 
+    setSelected(tempS);
+
+    const tempC = {...selected};
+    delete tempC[name];
+    tempC[tempN] = selected[name]; 
+    setColors(tempC);
+
+    setName(tempN);  
+    localStorage.name = tempN;
+  }
+
+  function changeColor() {
+    const temp = {...colors};
+    temp[name] = "";
+    while (!(/^\d{1,3} \d{1,3} \d{1,3}$/).test(temp[name])) {
+      temp[name] = prompt("Enter your color (space separated rgb values): ");
+    }
+    setColors(temp);
+    localStorage.color = temp[name];
+    databaseService.update("colors",temp);
+  }
+
+  //Get local info if it exists
+  useEffect(() => {
+    if (localStorage.highlightSoduko) setHighlightSoduko(localStorage.highlightSoduko);
+    else changeHighlightSoduko(false);
+    if (localStorage.highlightMatching) setHighlightSoduko(localStorage.highlightMatching);
+    else changeHighlightMatching(false);
+    if (localStorage.showContradiction) setHighlightSoduko(localStorage.showContradiction);
+    else changeShowContradiction(false);
+    if (localStorage.showButtons) setHighlightSoduko(localStorage.showButtons);
+    else changeShowButtons(true);
+    if (localStorage.showPlayers) setHighlightSoduko(localStorage.showPlayers);
+    else changeShowPlayers(true);
+
+    var tempN = "";
+    if (localStorage.name || localStorage.name === "") {
+      tempN = localStorage.name;
+      changeName(localStorage.name);
+    }
+    else changeName();
+
+    if (localStorage.color && localStorage.color !== "" && localStorage.color !== null && localStorage.color !== undefined) {
+      tempN = (tempN==="" ? name : tempN)
+      const temp = {...colors};
+      temp[tempN] = localStorage.color;
+      delete temp[""]; //bc we just added, gotta remove the default
+      setColors(temp);
+      databaseService.update("colors",temp);
+      // console.log(temp);
+    } else changeColor();
+  },[]);
+
 
   //----------DATABASE STUFF START----------
   useEffect(()=>{
@@ -26,6 +194,9 @@ const Board = () => {
       setSelected(items.val()["selected"]);
       setBoard_vals(items.val()["board_vals"]);
       setBoard_notes(items.val()["board_notes"]);
+      setBoard_colors(items.val()["board_colors"]);
+      setBoard_centers(items.val()["board_centers"]);
+      setColors(items.val()["colors"]);
     }
 
     databaseService.getAll().on("value", onDataChange);
@@ -36,88 +207,323 @@ const Board = () => {
   //-----------DATABASE STUFF END-----------
 
   function shouldHighlight(index, selected) {
+    //Note: in this case, selected should be selected[name]
+
     // return true if any of the below:
     // const same_box = Math.ceil(index%9/3)==Math.ceil(selected%9/3) //same 3 cols
     //               && Math.ceil(index/27)==Math.ceil(selected/27); //same 3 rows
     // const same_row = Math.ceil(index/9)==Math.ceil(selected/9);
     // const same_col = selected%9==index%9;
+    if (selected.length>1) return false; //only highlight if one square selected
+    index++; selected=selected[0]+1; //essentially using IDs
     return (Math.floor((index-1)%9/3)===Math.floor((selected-1)%9/3) 
     && Math.ceil(index/27)===Math.ceil(selected/27))
     ||(Math.ceil(index/9)===Math.ceil(selected/9))
     ||(selected%9===index%9)
   }
   
-  function getClassName(selected, index, val) {
+  function getCellClass(selected, index, val, colorVal) {
     return "cell"
-    + (selected===index ? " selected" 
-    : board_vals[selected]%10===val%10&&val>0 ? " equiv"
-    : shouldHighlight(index+1, selected+1) ? " highlighted" : "")
-    + (val>10 ? " given" : "");
+    + (Object.keys(selected).map((e)=>selected[e]).some((e)=>arrHas(e,index)) ? 
+    ""
+    : val>0&&(selected[name].length===1)&&board_vals[selected[name][0]]%10===val%10 ? 
+    (shouldHighlight(index,selected[name])&&showContradiction ? " mistake" : " ") + 
+    (highlightMatching ? " equiv" : "")
+    : (highlightSoduko ? shouldHighlight(index, selected[name]) : false) ? 
+    " highlighted" : "")
+    + (val>10 ? " given" : "")
+    + (colorDict[colorVal]);
+  }
+
+
+  function changeBoard(val,indexes) {
+    const temp = [...board_vals];
+    indexes.forEach(index => {
+      temp[index] = temp[index] === val ? 0 : val; //toggle if already
+    });
+    setBoard_vals(temp);
+    databaseService.update("board_vals",temp);
+  }
+
+  function changeNotes(val,indexes) {
+    const temp = [...board_notes];
+    indexes.forEach(index => {
+      if (val) {
+        // val in current ? add val : remove val;
+        const current = temp[index];
+        temp[index] = arrHas(current,val) ? current.replace(val,'') : current+val;
+      } else { //0 => clear
+        temp[index] = "";
+      }
+    });
+    setBoard_notes(temp);
+    databaseService.update("board_notes",temp);
+  }
+
+  function changeCenters(val, indexes) {
+    const temp = [...board_centers];
+    indexes.forEach(index => {
+      if (val) {
+        // val in current ? add val : remove val;
+        const current = temp[index];
+        temp[index] = arrHas(current,val) ? current.replace(val,'') : current+val;
+      } else { //0 => clear
+        temp[index] = "";
+      }
+    });
+    setBoard_centers(temp);
+    databaseService.update("board_centers",temp);
+  }
+
+  function changeColors(val, indexes) {
+    const temp = [...board_colors];
+    indexes.forEach(index => {
+      temp[index] = temp[index] === val ? 0 : val; //toggle if already
+    });
+    setBoard_colors(temp);
+    databaseService.update("board_colors",temp);
+  }
+
+  function inputNumber(key) {
+    if (mode === 1) changeNotes(key,selected[name]);
+    else if (mode === 2) changeCenters(key,selected[name]);
+    else if (mode === 3) changeColors(key,selected[name]);
+    else if (mode === 4) changeBoard(key+10,selected[name]); //given
+    else changeBoard(key,selected[name]);
+  }
+
+  function inputDelete() {
+    //if any val nonempty, delete all. if empty, clear all notes.
+    if (selected[name].some((val)=>board_vals[val])) changeBoard(0,selected[name]);
+    else {
+      changeNotes(0,selected[name]);
+      changeCenters(0,selected[name]);
+      changeColors(0,selected[name]);
+    }
+  }
+
+  function toggleMode(to) {
+    if (mode === to) setMode(0);
+    else setMode(to);
   }
 
   useEffect(() => {
 
-    function changeBoard(val,index) {
-      const temp = [...board_vals];
-      temp[index] = temp[index] === val ? 0 : val;
-      // setBoard_vals(temp);
-      databaseService.update("board_vals",temp);
-    }
-
-    function changeNotes(val,index) {
-      const temp = [...board_notes];
-      if (val) {
-        // val in current ? add val : remove val;
-        const current = temp[index];
-        temp[index] = stringHas(current,val) ? current.replace(val,'') : current+val;
-        // setBoard_notes(temp);
-      } else { //0 => clear
-        temp[index] = "";
-        // setBoard_notes(temp);
-      }
-      databaseService.update("board_notes",temp);
-    }
-
-    function handleDigit(event) {
-      if (49 <= event.which && event.which <= 57 && selected>=0) { //digit
+    function handleKeyPress(event) {
+      // console.log(event.which);
+      if (49 <= event.which && event.which <= 57 && selected[name].length>0) { //digit
         const key = event.which-48; //number
-        if (event.shiftKey) changeNotes(key,selected);
-        else if (event.altKey) changeBoard(key+10,selected);
-        else changeBoard(key,selected);
+        inputNumber(key);
       }
-      if (event.which === 8 && selected>=0) { //delete
-        //if val nonempty, delete it. if empty, clear notes.
-        if (board_vals[selected]) changeBoard(0,selected);
-        else changeNotes(0,selected);
-      }
-    };  
 
-    document.addEventListener('keydown',handleDigit);
+      //backspace
+      else if (event.which === 8 && selected[name].length>0) inputDelete();
+
+      //capslock || home
+      else if (event.which === 20 || event.which === 36) toggleMode(1);
+
+      // + || pgup
+      else if (event.which === 187 || event.which === 33) toggleMode(2);
+      
+      // - || pgdown
+      else if (event.which === 189 || event.which === 34) toggleMode(3);
+
+      //ctrl || end
+      else if (event.which === 17 || event.which === 35) toggleMode(4);
+
+      //ESC 
+      else if (event.which === 27) setOptionsMenu(!optionsMenu);
+    };  
+    document.addEventListener('keydown', handleKeyPress);
+
+    function tryClearSelected(event) { 
+      // console.log("clicked, target = " + event.target.id);
+      if (event.target !== document.getElementById("theHtml") 
+      && event.target !== document.getElementById("buttons")
+      && event.target !== document.getElementById("container")) return;
+      const temp = {};
+      Object.keys(selected).map((e)=>(temp[e]=[]));
+      setSelected(temp);
+    }
+
+    function handleClick(event) {
+      setMousedown(true);
+      tryClearSelected(event);
+    };
+    document.addEventListener('mousedown', handleClick);
+
+    function handleClickRelease(event) {
+      setMousedown(false);
+    };
+    document.addEventListener('mouseup', handleClickRelease);
     
     return () => {
-      document.removeEventListener('keydown',handleDigit);
+      document.removeEventListener('keydown', handleKeyPress);
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('mouseup', handleClickRelease);
     };
-  }, [board_notes, board_vals, selected]);
+  }, [board_notes, board_vals, board_centers, board_colors, colors, selected, mode, optionsMenu]); 
 
-  function toggleSelected(index) {
+  function clickToggleSelected(index,event) {
     // console.log(index + " :index|selected: " + selected);
+
+    /// OLD SINGLE SELECT
     // setSelected(selected===index ? -2 : index);
-    databaseService.update("selected",selected===index ? -2 : index);
+    // databaseService.update("selected",selected===index ? -2 : index);
+
+    // if not pressing shift, selected needs to be reset
+    var temp = {...selected};
+    if (!event.shiftKey) temp[name] = [];
+    // otherwise, just toggle each new one
+    if (arrHas(temp[name], index)) {
+      setAdding(false);
+      temp[name].splice(temp[name].indexOf(index), 1);
+    }
+    else {
+      setAdding(true);
+      temp[name].push(index);
+    }
+    setSelected(temp);
+    databaseService.update("selected",temp);
+  }
+
+  function dragToggleSelected(index,event) {
+    // console.log("called, mousedown: " + mousedown);
+    if (mousedown) {
+      const temp = {...selected};
+      if (adding && !arrHas(temp[name], index)) temp[name].push(index);
+      else if (!adding && arrHas(temp[name],index)) temp[name].splice(temp[name].indexOf(index), 1);;
+      setSelected(temp);
+      databaseService.update("selected",temp);
+    }
+  }
+
+  function getCellColor(selected,index) {
+    const keys = Object.keys(selected);
+    // console.log(keys);
+    // console.log(colors); //This is empty. why.
+    for (var i = 0; i<keys.length; i++) {
+      if (arrHas(selected[keys[i]],index)) {
+        return colorToText(colors[keys[i]]);
+      }
+    }
+    return "";
   }
 
   const Cells = board_vals.map((val,index) => (
     <div key={index.toString()} 
           id={index.toString()} 
-          className={getClassName(selected,index,val)}
-          onClick={()=>toggleSelected(index)}>
-      {val ? val%10 : NoteGrid(board_notes[index])}
+          className={getCellClass(selected,index,val,board_colors[index])}
+          onMouseDown={(event)=>clickToggleSelected(index, event)}
+          onMouseEnter={(event)=>dragToggleSelected(index, event)}
+          style={{backgroundColor: getCellColor(selected,index)}}>
+      {val ? val%10 : NoteGrid(index, board_notes[index], board_centers[index])}
     </div>
     )
   );
 
+  
+
+  /////----------------BOARD ENDS------------------
+
+  /////---------------BUTTONS START----------------
+  function clearBoard() { //not working rn, not being called for some reason
+    const temp = {};
+    Object.keys(selected).forEach((e)=>temp[e]=[]);
+    setSelected(temp);
+    setBoard_vals(new Array(81).fill(0));
+    setBoard_colors(new Array(81).fill(0));
+    setBoard_notes(new Array(81).fill(""));
+    setBoard_centers(new Array(81).fill(""));
+    setMode(0);
+  }
+
+  function getButtonClass(val) {
+    switch(mode) {
+      case 1: return "note";
+      case 2: return "center";
+      case 3: return "color-mode " + colorDict[val];
+      case 4: return "given";
+      default: return "";
+    }
+  }
+
+  const Buttons = () => (
+    <div className="buttons" id="buttons">
+      <div className="StateButtons">
+        <div id="notes" className={"state-button" + (mode===1 ? " on" : "")} onMouseDown={() => toggleMode(1)}>Corner</div>
+        <div id="centerer" className={"state-button" + (mode===2 ? " on" : "")} onMouseDown={() => toggleMode(2)}>Center</div>
+        <div id="colors" className={"state-button" + (mode===3 ? " on" : "")} onMouseDown={() => toggleMode(3)}>Colors</div>
+        <div id="given" className={"state-button" + (mode===4 ? " on" : "")} onMouseDown={() => toggleMode(4)}>Given</div>
+        <div id="deleter" className="state-button" onMouseDown={inputDelete}>Delete</div>
+      </div>
+      <div className={"NumberButtons"}>
+        {Array(9).fill(0).map((e,index) => 
+          (<div key={"button" + index} className={"num-button " + getButtonClass(index+1)} onMouseDown={() => inputNumber(index+1)}>{index+1}</div>))}
+      </div>
+    </div>
+  ); 
+
+
+  //Options are:
+  // highlightSoduko
+  // highlightMatching
+  // showContradiction
+  // showButtons
+  // showPlayers
+  // changeName
+  // changeColor
+  // clearBoard
+
+  const Options = () => {
+
+    function getOptionClass(option) {
+      return "options-menu-button" + (option ? " option-on" : "");
+    }
+
+    return (
+      <>
+        <div className="options-button" onMouseDown={openOptions}>⚙️</div>
+        <div id="options-overlay" className="options-overlay" style={{height: (optionsMenu ? "100%":"0%")}}>
+          <div className="options-menu-text">OPTIONS</div>
+          <div id="highlightSoduko-button" className={getOptionClass(highlightSoduko)} onMouseDown={() => changeHighlightSoduko(!highlightSoduko)}>Highlight Soduko</div>
+          <div id="highlightMatching-button" className={getOptionClass(highlightMatching)} onMouseDown={() => changeHighlightMatching(!highlightMatching)}>Highlight Matching</div>
+          <div id="showContradiction-button" className={getOptionClass(showContradiction)} onMouseDown={() => changeShowContradiction(!showContradiction)}>Show Contradiction</div>
+          <div id="showButtons-button" className={getOptionClass(showButtons)} onMouseDown={() => changeShowButtons(!showButtons)}>Show Buttons</div>
+          <div id="showPlayers-button" className={getOptionClass(showPlayers)} onMouseDown={() => changeShowPlayers(!showPlayers)}>Show Players</div>
+          <div id="changeNamer" className="options-menu-button" onMouseDown={() => changeName()}>Change Name</div>
+          <div id="changeColorer" className="options-menu-button" onMouseDown={changeColor}>Change Color</div>
+          <div id="clearer" className="options-menu-button" onMouseDown={clearBoard}>Clear Board</div>
+          <div className="options-close-button" onMouseDown={closeOptions}>X</div>
+        </div>
+      </>
+    );
+
+    function openOptions() {
+      setOptionsMenu(true);
+    }
+
+    function closeOptions() {
+      setOptionsMenu(false);
+    }
+  }
+
+  const Players = () => (
+    <div className="players-container">
+      {(Object.keys(colors).map((e) => (
+        <div id={"player" + e} key={"player" + e} style={{color: colorToText(colors[e])}}>{e}</div>
+      )))} 
+    </div>
+  );
+
   return (
-    <div className="cell-grid">
-      {Cells}
+    <div className="board-container">
+      <div className="cell-grid">
+        {Cells}
+      </div>
+      {showButtons ? <Buttons/> : ""}
+      {<Options/>}
+      {showPlayers ? <Players/> : ""} 
     </div>
   );
 }
@@ -126,18 +532,10 @@ const Board = () => {
 
 function App2() {
   return (
-    <div id="container" className="container">
+    <div id="container" className="container"> 
       <Board/>
     </div>
   );
 }
 
 export default App2;
-
-
-//TODO:
-//make notes appear in corners rather than just centrally
-
-//buttons at the bottom (change when holding shift/ctrl, buttons to turn on/off notes/main modes?)
-
-//make it work online - realtime database?

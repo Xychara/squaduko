@@ -15,8 +15,10 @@ class databaseService {
   }
 
   update(key, value) {
+    var obj={};
+    obj[key]=value;
     return db.update({
-      [key]: value,
+      [key]: value, 
     });
     // .then(()=>console.log('Data updated: ' + key));
   }
