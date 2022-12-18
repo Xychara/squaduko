@@ -8,15 +8,15 @@ function arrHas(arr,char) {
 
 var colorDict = {
   0: "",
-  1: " red",
-  2: " orange",
-  3: " yellow",
-  4: " green",
-  5: " forestgreen",
-  6: " blue",
-  7: " purple",
-  8: " periwinkle",
-  9: " white"
+  1: "red",
+  2: "orange",
+  3: "yellow",
+  4: "green",
+  5: "forestgreen",
+  6: "blue",
+  7: "purple",
+  8: "periwinkle",
+  9: "white"
 }
 
 const NoteGrid = (loc, notes, centers) => {
@@ -59,17 +59,101 @@ const NoteGrid = (loc, notes, centers) => {
 
 const Board = () => {
   //Stored info
-  const [selected, setSelected] = useState({"":[]}); 
+  const [selected, setSelected] = useState({"default":[1]}); 
   const [board_vals, setBoard_vals] = useState(new Array(81).fill(0));
   const [board_notes, setBoard_notes] = useState(new Array(81).fill(""));
   const [board_colors, setBoard_colors] = useState(new Array(81).fill(0));
   const [board_centers, setBoard_centers] = useState(new Array(81).fill(""));
-  const [colors, setColors] = useState({"":""});
+  const [colors, setColors] = useState({"default":""});
 
   function colorToText(color) {
     const temp = color.split(/ /);
     return ("rgba(" + temp[0] + "," + temp[1] + "," + temp[2] + ",0.7)")
   }
+
+  //----------DATABASE STUFF START----------
+
+  useEffect(()=>{
+    // databaseService.deleteAll();
+
+    // check if things exist, if not instantiate them
+    databaseService.getAll().once("value").then(function(snapshot) {
+      if (!snapshot.child("selected").exists()) {
+        databaseService.add("selected",{"default":[1]});
+        setSelected({"default":[1]});
+      } else {
+        setSelected(snapshot.child("selected").val());
+      }
+      if (!snapshot.child("colors").exists()) {
+        databaseService.add("colors",{"default":"100 100 100"});
+        setColors({"default":"100 100 100"});
+      } else {
+        setColors(snapshot.child("colors").val());
+      }
+      if (!snapshot.child("board_vals").exists()) {
+        databaseService.add("board_vals", new Array(81).fill(0));
+      } else {
+        setBoard_vals(snapshot.child("board_vals").val());
+      }
+      if (!snapshot.child("board_notes").exists()) {
+        databaseService.add("board_notes", new Array(81).fill(""));
+      } else {
+        setBoard_notes(snapshot.child("board_notes").val());
+      }
+      if (!snapshot.child("board_colors").exists()) {
+        databaseService.add("board_colors", new Array(81).fill(0));
+      } else {
+        setBoard_colors(snapshot.child("board_colors"));
+      }
+      if (!snapshot.child("board_centers").exists()) {
+        databaseService.add("board_centers", new Array(81).fill(""));
+      } else {
+        setBoard_centers(snapshot.child("board_centers").val());
+      }
+    });
+
+
+    /* THE ISSUE:::
+      because we are getting and setting selected and colors, we 
+      reset the database with each new input.
+
+      What we want to do is just ADD each new piece of info, use it all, in all
+      local things, and then REMOVE it at the end.
+
+      But because we aren't waiting until the local data gets updated to update the 
+      database's data, things are just canceling out.
+
+      Ideas to fix: 
+        1. completely rework (UGH) the entire selected, colors code to work with a
+        constantly being added to/removed from dict. Could do this by just using add thing
+        to add to a selected dict, an array where 0th element is color, 1st is selected array. Then just
+        loop throught those. somehow store key locally used to make the addition and modify that when changing things.
+        ^ probs the better option, rework might not be bad at all bc already done just need to store key instead of using name
+        as key. Just need to figure out well how adding/removing from dict works.
+
+        2. somehow get selected, colors to WAIT until the local data matches the data from the database,
+        only then start creating/updating stuff.
+    */
+
+
+
+    function onDataChange(items) {
+      // console.log("Discovered data: ", items.val());
+      setSelected(items.val()["selected"]);
+      setBoard_vals(items.val()["board_vals"]);
+      setBoard_notes(items.val()["board_notes"]);
+      setBoard_colors(items.val()["board_colors"]);
+      setBoard_centers(items.val()["board_centers"]);
+      setColors(items.val()["colors"]);
+    }
+
+    databaseService.getAll().on("value", onDataChange);
+    return () => {
+      databaseService.getAll().off("value", onDataChange);
+    }
+  }, []);
+
+  //-----------DATABASE STUFF END-----------
 
   //Mode
   const [mode, setMode] = useState(0);
@@ -93,6 +177,25 @@ const Board = () => {
 
   const [name, setName] = useState("");
 
+
+  //trying to remove people's info when they leave
+  useEffect(() => {
+    var tempN = name==="" ? localStorage.name : name;
+
+    function deleteRelevantData() { 
+      databaseService.delete("selected",tempN);
+      databaseService.delete("colors",tempN);
+    }
+
+    window.addEventListener("beforeunload", deleteRelevantData);
+
+    // return () => {
+    //   //window.removeEventListener("beforeunload",deleteRelevantData);
+    // }
+  }, [name])
+
+
+  
   //Local info + state modifier functions
   function changeHighlightSoduko(to) {
     setHighlightSoduko(to);
@@ -119,28 +222,33 @@ const Board = () => {
     localStorage.showPlayers = to;
   }
 
-  //need some kind of func for setting name
   function changeName(input) {
     var tempN = "";
+    var inputted = false;
     if (input!=="null"&&input!=="undefined"&&input!==null&&input!==undefined) tempN = input;
     else {
+      inputted= true;
       while (tempN === "" || tempN === "undefined" || tempN === "null" || tempN === undefined || tempN === null) {
         tempN = prompt("Enter your name: ");
       }
     }
     
     const tempS = {...selected};
-    delete tempS[name];
+    // delete tempS[name];
     tempS[tempN] = selected[name]; 
     setSelected(tempS);
 
     const tempC = {...selected};
-    delete tempC[name];
+    // delete tempC[name];
     tempC[tempN] = selected[name]; 
     setColors(tempC);
 
     setName(tempN);  
     localStorage.name = tempN;
+
+    if (inputted) {
+      window.location.reload();
+    }
   }
 
   function changeColor() {
@@ -151,7 +259,7 @@ const Board = () => {
     }
     setColors(temp);
     localStorage.color = temp[name];
-    databaseService.update("colors",temp);
+    if (name !== "") databaseService.update("colors",temp);
   }
 
   //Get local info if it exists
@@ -174,37 +282,24 @@ const Board = () => {
     }
     else changeName();
 
+    tempN = (tempN==="" ? name : tempN)
+
     if (localStorage.color && localStorage.color !== "" && localStorage.color !== null && localStorage.color !== undefined) {
-      tempN = (tempN==="" ? name : tempN)
-      const temp = {...colors};
-      temp[tempN] = localStorage.color;
-      delete temp[""]; //bc we just added, gotta remove the default
-      setColors(temp);
-      databaseService.update("colors",temp);
+      const tempC = {...colors};
+      // console.log(colors);
+      tempC[tempN] = localStorage.color;
+      // delete temp["default"]; //bc we just added, gotta remove the default
+      setColors(tempC);
+      // console.log(temp);
+      databaseService.update("colors",tempC);
       // console.log(temp);
     } else changeColor();
+
+    const tempS = {...colors};
+    tempS[tempN] = new Array(1).fill(1);
+    setSelected(tempS);
+    databaseService.update("selected",tempS);
   },[]);
-
-
-  //----------DATABASE STUFF START----------
-  useEffect(()=>{
-    
-    function onDataChange(items) {
-      // console.log("Discovered data: ", items.val());
-      setSelected(items.val()["selected"]);
-      setBoard_vals(items.val()["board_vals"]);
-      setBoard_notes(items.val()["board_notes"]);
-      setBoard_colors(items.val()["board_colors"]);
-      setBoard_centers(items.val()["board_centers"]);
-      setColors(items.val()["colors"]);
-    }
-
-    databaseService.getAll().on("value", onDataChange);
-    return () => {
-      databaseService.getAll().off("value", onDataChange);
-    }
-  }, []);
-  //-----------DATABASE STUFF END-----------
 
   function shouldHighlight(index, selected) {
     //Note: in this case, selected should be selected[name]
@@ -214,7 +309,9 @@ const Board = () => {
     //               && Math.ceil(index/27)==Math.ceil(selected/27); //same 3 rows
     // const same_row = Math.ceil(index/9)==Math.ceil(selected/9);
     // const same_col = selected%9==index%9;
+    // console.log(selected);
     if (selected.length>1) return false; //only highlight if one square selected
+    if (selected[0]===index) return false; //only highlight if NOT current square
     index++; selected=selected[0]+1; //essentially using IDs
     return (Math.floor((index-1)%9/3)===Math.floor((selected-1)%9/3) 
     && Math.ceil(index/27)===Math.ceil(selected/27))
@@ -223,16 +320,14 @@ const Board = () => {
   }
   
   function getCellClass(selected, index, val, colorVal) {
-    return "cell"
-    + (Object.keys(selected).map((e)=>selected[e]).some((e)=>arrHas(e,index)) ? 
-    ""
-    : val>0&&(selected[name].length===1)&&board_vals[selected[name][0]]%10===val%10 ? 
-    (shouldHighlight(index,selected[name])&&showContradiction ? " mistake" : " ") + 
-    (highlightMatching ? " equiv" : "")
-    : (highlightSoduko ? shouldHighlight(index, selected[name]) : false) ? 
-    " highlighted" : "")
+    return "cell" 
+    + (val>0&&(selected[name].length===1)&&board_vals[selected[name][0]]%10===val%10 ? 
+    ((showContradiction&&shouldHighlight(index,selected[name]) ? " mistake" : "") + 
+    (highlightMatching ? " equiv" : ""))
+    : ((highlightSoduko ? shouldHighlight(index, selected[name]) : false) ? 
+    " highlighted" : ""))
     + (val>10 ? " given" : "")
-    + (colorDict[colorVal]);
+    + (" " + colorDict[colorVal]);
   }
 
 
@@ -400,8 +495,7 @@ const Board = () => {
 
   function getCellColor(selected,index) {
     const keys = Object.keys(selected);
-    // console.log(keys);
-    // console.log(colors); //This is empty. why.
+    if (arrHas(keys, "default")) keys.splice(keys.indexOf("default"), 1);
     for (var i = 0; i<keys.length; i++) {
       if (arrHas(selected[keys[i]],index)) {
         return colorToText(colors[keys[i]]);
@@ -432,9 +526,17 @@ const Board = () => {
     Object.keys(selected).forEach((e)=>temp[e]=[]);
     setSelected(temp);
     setBoard_vals(new Array(81).fill(0));
+    databaseService.update("board_vals", new Array(81).fill(0));
+
     setBoard_colors(new Array(81).fill(0));
+    databaseService.update("board_colors", new Array(81).fill(0));
+
     setBoard_notes(new Array(81).fill(""));
+    databaseService.update("board_notes", new Array(81).fill(""));
+
     setBoard_centers(new Array(81).fill(""));
+    databaseService.update("board_centers", new Array(81).fill(""));
+
     setMode(0);
   }
 
@@ -481,19 +583,29 @@ const Board = () => {
       return "options-menu-button" + (option ? " option-on" : "");
     }
 
+    function clearDatabase() {
+      databaseService.deleteAll();
+      window.location.reload();
+    }
+
     return (
       <>
         <div className="options-button" onMouseDown={openOptions}>⚙️</div>
         <div id="options-overlay" className="options-overlay" style={{height: (optionsMenu ? "100%":"0%")}}>
+          <div className="hidden">GAP</div>
           <div className="options-menu-text">OPTIONS</div>
+          <div className="hidden">GAP</div>
           <div id="highlightSoduko-button" className={getOptionClass(highlightSoduko)} onMouseDown={() => changeHighlightSoduko(!highlightSoduko)}>Highlight Soduko</div>
           <div id="highlightMatching-button" className={getOptionClass(highlightMatching)} onMouseDown={() => changeHighlightMatching(!highlightMatching)}>Highlight Matching</div>
           <div id="showContradiction-button" className={getOptionClass(showContradiction)} onMouseDown={() => changeShowContradiction(!showContradiction)}>Show Contradiction</div>
           <div id="showButtons-button" className={getOptionClass(showButtons)} onMouseDown={() => changeShowButtons(!showButtons)}>Show Buttons</div>
           <div id="showPlayers-button" className={getOptionClass(showPlayers)} onMouseDown={() => changeShowPlayers(!showPlayers)}>Show Players</div>
+          <div className="hidden">GAP</div>
           <div id="changeNamer" className="options-menu-button" onMouseDown={() => changeName()}>Change Name</div>
           <div id="changeColorer" className="options-menu-button" onMouseDown={changeColor}>Change Color</div>
+          <div className="hidden">GAP</div>
           <div id="clearer" className="options-menu-button" onMouseDown={clearBoard}>Clear Board</div>
+          <div id="databaseClearer" className="options-menu-button" onMouseDown={clearDatabase}>Reset Database</div>
           <div className="options-close-button" onMouseDown={closeOptions}>X</div>
         </div>
       </>
@@ -508,13 +620,19 @@ const Board = () => {
     }
   }
 
-  const Players = () => (
+  const Players = () => {
+    const keys = Object.keys(colors);
+    if (arrHas(keys, "default")) keys.splice(keys.indexOf("default"), 1);
+    
+    return (
     <div className="players-container">
-      {(Object.keys(colors).map((e) => (
+      {keys.map((e) => (
         <div id={"player" + e} key={"player" + e} style={{color: colorToText(colors[e])}}>{e}</div>
-      )))} 
+        )
+      )}
     </div>
-  );
+    );
+  };
 
   return (
     <div className="board-container">

@@ -7,10 +7,15 @@ class databaseService {
     return db;
   }
 
+  // getSnapshot() {
+  //   db.once("value").then(function(snapshot) {
+  //     // var selected = snapshot.child("selected").val();
+  //     return selected;
+  //   })
+  // }
+
   add(key,value) {
-    return db.set({
-      [key]: value,
-    });
+    return db.child(key).set(value);
     // .then(()=>console.log('Data added.'));
   }
 
@@ -23,8 +28,12 @@ class databaseService {
     // .then(()=>console.log('Data updated: ' + key));
   }
 
-  delete(key) {
-    return db.child(key).remove();
+  // delete(key) {
+  //   return db.child(key).remove();
+  // }
+
+  delete(key1, key2) {
+    return db.child(key1).child(key2).remove();
   }
 
   deleteAll() {

@@ -279,7 +279,7 @@
 }
 
 .options-menu-text {
-  font-size: 6vmin;
+  font-size: 10vmin;
 }
 
 .options-menu-button {
@@ -307,6 +307,10 @@
 .options-close-button:hover {
   background-color: rgba(100,100,100,.5);
   transition: .2s;
+}
+
+.hidden {
+  color: rgba(30, 30, 30, 0.7)
 }
 
 /* Players */
