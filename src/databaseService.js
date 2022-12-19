@@ -20,9 +20,14 @@ class databaseService {
   }
 
   update(key, value) {
-    var obj={};
-    obj[key]=value;
     return db.update({
+      [key]: value, 
+    });
+    // .then(()=>console.log('Data updated: ' + key));
+  }
+
+  updateChild(children, key, value) {
+    return db.child(children).update({
       [key]: value, 
     });
     // .then(()=>console.log('Data updated: ' + key));

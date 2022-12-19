@@ -93,8 +93,14 @@
 
 .center {
   color: rgb(200, 200, 200);
-  /* inset: 4vmin; DOES THIS DO SOMETHING??? */ 
-  font-size: 2.5vmin;
+  font-size: 2.8vmin;
+}
+
+.center-pos {
+  position: absolute;
+  display: flex;
+  justify-self: center;
+  align-self: center;
 }
 
 .given {
@@ -325,6 +331,10 @@
   color: white;
 }
 
+.player-name:nth-child(2n) {
+  padding-left: 15px;
+}
+
 
 /* Layout change based on screen size */
 
@@ -345,7 +355,7 @@
     grid-template: repeat(3,2vmax) / repeat(3,2vmax);
   }
   .center {
-    font-size: 1.5vmax;
+    font-size: 1.7vmax;
   }
   .NumberButtons {
     font-size: 5vmax;
@@ -384,7 +394,7 @@
     grid-template: repeat(3,18px) / repeat(3,18px);
   }
   .center {
-    font-size: 16px;
+    font-size: 20px;
   }
   .NumberButtons {
     font-size: 45.5px;
@@ -417,7 +427,7 @@
     grid-template: repeat(3,2.75vmin) / repeat(3,2.75vmin);
   }
   .center {
-    font-size: 2.5vmin;
+    font-size: 2.8vmin;
   }
   .NumberButtons {
     font-size: 7vmin;
