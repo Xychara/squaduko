@@ -12,9 +12,6 @@
         -ms-user-select: none; /* Internet Explorer/Edge */
             user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
-
-  /* disable s scroll */
-  overflow-x: hidden;
 }
 
 .board-container {
@@ -80,6 +77,11 @@
   background-color: rgb(20, 20, 20);
 }
 
+/* giving lower priority than selected */
+.highlighted {
+  background-color: rgb(36, 36, 36);
+}
+
 .selected {
   background-color: rgba(0, 133, 221, 0.8);
   /* outline: 5px solid blue;
@@ -109,10 +111,6 @@
 
 .equiv {
   background-color: rgba(119, 201, 255, 0.3);
-}
-
-.highlighted {
-  background-color: rgb(36, 36, 36);
 }
 
 .subgrid {
@@ -322,11 +320,12 @@
 /* Players */
 .players-container {
   display: flex;
-  width: 1275px;
+  width: 100%;
   align-items: center;
   justify-content: center;
   position: absolute;
   top: 10px;
+  left: 0;
   flex-direction: row;
   color: white;
 }
@@ -367,9 +366,6 @@
   .num-button {
     padding: .675vmax;
   }
-  .players-container {
-    width: 98vw;
-  }
 }
 
 @media screen and (max-width: 1000px) {
@@ -407,9 +403,6 @@
   .num-button {
     padding: 6.5px;
   }
-  .players-container {
-    width: 585px;
-  }
 }
 
 
@@ -439,8 +432,5 @@
   }
   .num-button {
     padding: 1vmin;
-  }
-  .players-container {
-    width: 90vw;
   }
 }

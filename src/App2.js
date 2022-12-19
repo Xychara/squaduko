@@ -66,44 +66,44 @@ const Board = () => {
     var data = {};
     databaseService.getAll().once("value").then(function(snapshot) {
       if (!snapshot.child("selected").exists()) {
-        console.log("selected do/esnt exist, setting up");
+        console.log("selected doesnt exist, setting up");
         databaseService.add("selected",{"default":[0]});
-        data["selected"] = {"default":[0]};
-      } else {
-        data["selected"] = snapshot.child("selected").val();
+      //   data["selected"] = {"default":[0]};
+      // } else {
+      //   data["selected"] = snapshot.child("selected").val();
       }
       if (!snapshot.child("colors").exists()) {
         console.log("colors doesn't e/xist, setting up");
         databaseService.add("colors",{"default":"100 100 100"});
-        data["colors"] = {"default":"100 100 100"};
-      } else {
+      //   data["colors"] = {"default":"100 100 100"};
+      // } else {
         // console.log("colors exists, setting colors to it");
         // console.log(snapshot.child("colors").val());
-        data["colors"] = snapshot.child("colors").val();
+        // data["colors"] = snapshot.child("colors").val();
       }
       if (!snapshot.child("board_vals").exists()) {
         databaseService.add("board_vals", new Array(81).fill(0));
-        data["board_vals"] = new Array(81).fill(0);
-      } else {
-        data["board_vals"] = snapshot.child("board_vals").val();
+      //   data["board_vals"] = new Array(81).fill(0);
+      // } else {
+      //   data["board_vals"] = snapshot.child("board_vals").val();
       }
       if (!snapshot.child("board_notes").exists()) {
         databaseService.add("board_notes", new Array(81).fill(""));
-        data["board_notes"] = new Array(81).fill("");
-      } else {
-        data["board_notes"] = snapshot.child("board_notes").val();
+      //   data["board_notes"] = new Array(81).fill("");
+      // } else {
+      //   data["board_notes"] = snapshot.child("board_notes").val();
       }
       if (!snapshot.child("board_colors").exists()) {
         databaseService.add("board_colors", new Array(81).fill(0));
-        data["board_colors"] = new Array(81).fill(0);
-      } else {
-        data["board_colors"] = snapshot.child("board_colors").val();
+      //   data["board_colors"] = new Array(81).fill(0);
+      // } else {
+      //   data["board_colors"] = snapshot.child("board_colors").val();
       }
       if (!snapshot.child("board_centers").exists()) {
         databaseService.add("board_centers", new Array(81).fill(""));
-        data["board_centers"] = new Array(81).fill("");
-      } else {
-        data["board_centers"] = snapshot.child("board_centers").val();
+      //   data["board_centers"] = new Array(81).fill("");
+      // } else {
+      //   data["board_centers"] = snapshot.child("board_centers").val();
       }
     });
     // console.log(data);
@@ -261,7 +261,7 @@ const Board = () => {
     var inputted = false;
     if (input!=="null"&&input!=="undefined"&&input!==null&&input!==undefined) tempN = input;
     else {
-      inputted= true;
+      inputted = true;
       while (tempN === "" || tempN === "undefined" || tempN === "null" || tempN === undefined || tempN === null) {
         tempN = prompt("Enter your name: ");
       }
@@ -356,11 +356,11 @@ const Board = () => {
   
   function getCellClass(selected, index, val, colorVal) {
     return "cell" 
+    + ((highlightSoduko ? shouldHighlight(index, selected[name]) : false) ? 
+    " highlighted" : "")
     + (typeof(selected[name])!=="undefined"&&val>0&&(selected[name].length===1)&&board_vals[selected[name][0]]%10===val%10 ? 
     ((showContradiction&&shouldHighlight(index,selected[name]) ? " mistake" : "") + 
-    (highlightMatching ? " equiv" : ""))
-    : ((highlightSoduko ? shouldHighlight(index, selected[name]) : false) ? 
-    " highlighted" : ""))
+    (highlightMatching ? " equiv" : "")) : "")
     + (val>10 ? " given" : "")
     + (" " + colorDict[colorVal]);
   }
@@ -618,10 +618,10 @@ const Board = () => {
       return "options-menu-button" + (option ? " option-on" : "");
     }
 
-    function clearDatabase() {
-      databaseService.deleteAll();
-      window.location.reload();
-    }
+    // function clearDatabase() {
+    //   databaseService.deleteAll();
+    //   window.location.reload();
+    // }
 
     return (
       <>
@@ -640,7 +640,7 @@ const Board = () => {
           <div id="changeColorer" className="options-menu-button" onMouseDown={changeColor}>Change Color</div>
           <div className="hidden">GAP</div>
           <div id="clearer" className="options-menu-button" onMouseDown={clearBoard}>Clear Board</div>
-          <div id="databaseClearer" className="options-menu-button" onMouseDown={clearDatabase}>Reset Database</div>
+          {/* <div id="databaseClearer" className="options-menu-button" onMouseDown={clearDatabase}>Reset Database</div> */}
           <div className="options-close-button" onMouseDown={closeOptions}>X</div>
         </div>
       </>
