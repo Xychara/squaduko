@@ -330,7 +330,7 @@
   color: white;
 }
 
-.player-name:nth-child(2n) {
+.player-name:nth-child(n+1) {
   padding-left: 15px;
 }
 
