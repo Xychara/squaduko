@@ -437,6 +437,10 @@ const Board = () => {
     else setMode(to);
   }
 
+  function toggleOptions() {
+    setOptionsMenu(!optionsMenu);
+  }
+
   useEffect(() => {
 
     function handleKeyPress(event) {
@@ -462,7 +466,7 @@ const Board = () => {
       else if (event.which === 17 || event.which === 35) toggleMode(4);
 
       //ESC 
-      else if (event.which === 27) setOptionsMenu(!optionsMenu);
+      else if (event.which === 27) toggleOptions();
     };  
     document.addEventListener('keydown', handleKeyPress);
 
@@ -618,29 +622,33 @@ const Board = () => {
       return "options-menu-button" + (option ? " option-on" : "");
     }
 
-    // function clearDatabase() {
-    //   databaseService.deleteAll();
-    //   window.location.reload();
-    // }
+    function clearDatabase() {
+      // databaseService.deleteAll(); for now, just gonna have it clear NON-BOARD stuff
+      Object.keys(colors).forEach((e)=> {
+        if (e !== "default") {
+          databaseService.delete("selected", e);
+          databaseService.delete("colors", e);
+        }
+      }); 
+      
+      window.location.reload();
+    }
 
     return (
       <>
-        <div className="options-button" onMouseDown={openOptions}>⚙️</div>
+        <div className="options-button" onMouseDown={toggleOptions}>⚙️</div>
         <div id="options-overlay" className="options-overlay" style={{height: (optionsMenu ? "100%":"0%")}}>
-          <div className="hidden">GAP</div>
           <div className="options-menu-text">OPTIONS</div>
-          <div className="hidden">GAP</div>
+          <div className="hidden">{"Heres an easter egg for you dad >:)"}</div>
           <div id="highlightSoduko-button" className={getOptionClass(highlightSoduko)} onMouseDown={() => changeHighlightSoduko(!highlightSoduko)}>Highlight Soduko</div>
           <div id="highlightMatching-button" className={getOptionClass(highlightMatching)} onMouseDown={() => changeHighlightMatching(!highlightMatching)}>Highlight Matching</div>
           <div id="showContradiction-button" className={getOptionClass(showContradiction)} onMouseDown={() => changeShowContradiction(!showContradiction)}>Show Contradiction</div>
           <div id="showButtons-button" className={getOptionClass(showButtons)} onMouseDown={() => changeShowButtons(!showButtons)}>Show Buttons</div>
-          <div id="showPlayers-button" className={getOptionClass(showPlayers)} onMouseDown={() => changeShowPlayers(!showPlayers)}>Show Players</div>
-          <div className="hidden">GAP</div>
+          <div id="showPlayers-button" className={getOptionClass(showPlayers) + " menu-gap"} onMouseDown={() => changeShowPlayers(!showPlayers)}>Show Players</div>
           <div id="changeNamer" className="options-menu-button" onMouseDown={() => changeName()}>Change Name</div>
-          <div id="changeColorer" className="options-menu-button" onMouseDown={changeColor}>Change Color</div>
-          <div className="hidden">GAP</div>
+          <div id="changeColorer" className="options-menu-button menu-gap" onMouseDown={changeColor}>Change Color</div>
           <div id="clearer" className="options-menu-button" onMouseDown={clearBoard}>Clear Board</div>
-          {/* <div id="databaseClearer" className="options-menu-button" onMouseDown={clearDatabase}>Reset Database</div> */}
+          <div id="databaseClearer" className="options-menu-button" onMouseDown={clearDatabase}>Reset Database</div>
           <div className="options-close-button" onMouseDown={closeOptions}>X</div>
         </div>
       </>
