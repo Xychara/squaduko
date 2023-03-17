@@ -13,7 +13,6 @@
             user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
 
-  margin:auto;
 
 }
 
@@ -103,9 +102,9 @@
 
 .center-pos {
   position: absolute;
-  display: flex;
-  justify-self: center;
-  align-self: center;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
 }
 
 .given {
@@ -119,6 +118,9 @@
 .subgrid {
   display: grid;
   grid-template: repeat(3,2.75vmin) / repeat(3,2.75vmin);
+  justify-self: center;
+  align-self: center;
+  position: relative;
 }
 
 .mistake { /* For detected errors */

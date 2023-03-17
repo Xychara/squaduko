@@ -414,6 +414,25 @@ const Board = () => {
     databaseService.update("board_colors",temp);
   }
 
+  function shiftSelection(key) {
+    var temp = {...selected};
+    var change;
+    //left=0, up=1, right=2, down=3
+    if (key === 0) {
+      if (selected[name][0]%9===0) change = 8;
+      else change = -1;
+    }
+    else if (key === 1) change = -9;
+    else if (key === 2) {
+      if (selected[name][0]%9===8) change = -8;
+      else change = 1;
+    }
+    else if (key === 3) change = 9;
+    temp[name][0] = (selected[name][0] + change + 81) % 81;
+    setSelected(temp);
+    databaseService.updateChild("selected",name,temp[name]);
+  }
+
   function inputNumber(key) {
     if (mode === 1) changeNotes(key,selected[name]);
     else if (mode === 2) changeCenters(key,selected[name]);
@@ -445,25 +464,33 @@ const Board = () => {
 
     function handleKeyPress(event) {
       // console.log(event.which);
-      if (49 <= event.which && event.which <= 57 && selected[name].length>0) { //digit
+      
+      //digit
+      if (49 <= event.which && event.which <= 57 && selected[name].length>0) { 
         const key = event.which-48; //number
         inputNumber(key);
       }
 
-      //backspace
-      else if (event.which === 8 && selected[name].length>0) inputDelete();
+      //arrow key
+      if (37 <= event.which && event.which <= 40 && selected[name].length === 1) { 
+        const key = event.which-37; //left=0, up=1, right=2, down=3
+        shiftSelection(key);
+      }
 
-      //capslock || home
-      else if (event.which === 20 || event.which === 36) toggleMode(1);
+      //backspace || delete
+      else if ((event.which === 8 || event.which === 46) && selected[name].length>0) inputDelete();
 
-      // + || pgup
-      else if (event.which === 187 || event.which === 33) toggleMode(2);
+      //capslock || home || a
+      else if (event.which === 20 || event.which === 36 || event.which === 65) toggleMode(1);
+
+      // + || pgup || s
+      else if (event.which === 187 || event.which === 33 || event.which === 83) toggleMode(2);
       
-      // - || pgdown
-      else if (event.which === 189 || event.which === 34) toggleMode(3);
+      // - || pgdown || d
+      else if (event.which === 189 || event.which === 34 || event.which === 68) toggleMode(3);
 
-      //ctrl || end
-      else if (event.which === 17 || event.which === 35) toggleMode(4);
+      //ctrl || end || f
+      else if (event.which === 17 || event.which === 35 || event.which === 70) toggleMode(4);
 
       //ESC 
       else if (event.which === 27) toggleOptions();
