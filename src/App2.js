@@ -208,6 +208,7 @@ const Board = () => {
   const [showContradiction, setShowContradiction] = useState(true); //errors in red
   const [showButtons, setShowButtons] = useState(true); //show input buttons
   const [showPlayers, setShowPlayers] = useState(true); //show current players in their colors
+  const [clickIgnore, setClickIgnore] = useState(false); //ignore next click, for alert closing issue
 
   const [name, setName] = useState("");
 
@@ -460,6 +461,63 @@ const Board = () => {
     setOptionsMenu(!optionsMenu);
   }
 
+  function checkBoard() {
+    setClickIgnore(true); //to prevent clicking issue after closing alert
+
+    let row_loc = [0,1,2,3,4,5,6,7,8]; //+9 8x to get all rows  
+    let col_loc = [0,9,18,27,36,45,54,63,72]; //+1 8x to get all cols
+    let box_loc = [0,1,2, 9,10,11, 18,19,20]; //(+3 3x)+18 2x, then one more +3 2x to get all boxs
+
+    //check all rows and cols
+    for (let i=0; i<9; i++) {
+      // console.log(i + "th row: " + has1to9(mindex(board_vals, row_loc)))
+      // console.log(i + "th col: " + has1to9(mindex(board_vals, col_loc)))
+      // console.log(i + "th box: " + has1to9(mindex(board_vals, box_loc)))
+      
+      if (!has1to9(mindex(board_vals, row_loc)) || !has1to9(mindex(board_vals, col_loc)) || !has1to9(mindex(board_vals, box_loc))){
+        boardIncompleteMessage();
+        return;
+      }
+      row_loc = incrementArrayElementsBy(row_loc, 9);
+      col_loc = incrementArrayElementsBy(col_loc, 1);
+      box_loc = incrementArrayElementsBy(box_loc, 3);
+      if ((i+1)%3===0) box_loc = incrementArrayElementsBy(box_loc, 18);
+    }
+    boardCompleteMessage();
+  }
+
+  function has1to9(vals) {
+    const ans = [1,2,3,4,5,6,7,8,9];
+    return compare(ans,vals);
+  }
+
+  function compare(arr1,arr2){
+    let result = true;
+    arr1 = arr1.map(e => e%10).sort();
+    arr2 = arr2.map(e => e%10).sort();
+    arr1.forEach((e,i)=>{
+      // console.log(e + " !== " + arr2[i] + " -> " + (e !== arr2[i]))
+      if (e !== arr2[i]) result=false;
+    })
+    return result;
+  }
+
+  function mindex(arr, inds){
+    return inds.map(e => arr[e]);
+  }
+
+  function incrementArrayElementsBy(arr, inc){
+    return arr.map(e => e+inc);
+  }
+
+  function boardIncompleteMessage(){
+    window.confirm("Nope :(\nBoard incomplete");
+  }
+
+  function boardCompleteMessage(){
+    window.confirm("Congrats! :)\nBoard completed!");
+  }
+
   useEffect(() => {
 
     function handleKeyPress(event) {
@@ -476,6 +534,9 @@ const Board = () => {
         const key = event.which-37; //left=0, up=1, right=2, down=3
         shiftSelection(key);
       }
+
+      //SPACE
+      else if (event.which === 32) toggleMode(0);
 
       //backspace || delete
       else if ((event.which === 8 || event.which === 46) && selected[name].length>0) inputDelete();
@@ -508,6 +569,14 @@ const Board = () => {
     }
 
     function handleClick(event) {
+      // console.log("click!" + " ignore= " + clickIgnore)
+      if (clickIgnore) { //this works weirdly inconsistently
+        // console.log("set clickIgnore false!")
+        setClickIgnore(false);
+        // console.log("clickIgnore now: " + clickIgnore)
+        return;
+      }
+
       setMousedown(true);
       tryClearSelected(event);
     };
@@ -548,7 +617,7 @@ const Board = () => {
     databaseService.updateChild("selected",name,temp[name]);
   }
 
-  function dragToggleSelected(index,event) {
+  function dragToggleSelected(index) {
     // console.log("called, mousedown: " + mousedown);
     if (mousedown) {
       const temp = {...selected};
@@ -575,7 +644,7 @@ const Board = () => {
           id={index.toString()} 
           className={getCellClass(selected,index,val,board_colors[index])}
           onMouseDown={(event)=>clickToggleSelected(index, event)}
-          onMouseEnter={(event)=>dragToggleSelected(index, event)}
+          onMouseEnter={()=>dragToggleSelected(index)}
           style={{backgroundColor: getCellColor(selected,index)}}>
       {val ? val%10 : NoteGrid(index, board_notes[index], board_centers[index])}
     </div>
@@ -664,6 +733,7 @@ const Board = () => {
     return (
       <>
         <div className="options-button" onMouseDown={toggleOptions}>⚙️</div>
+        <div className="check-button" onMouseDown={checkBoard}>✅</div>
         <div id="options-overlay" className="options-overlay" style={{height: (optionsMenu ? "100%":"0%")}}>
           <div className="options-menu-text">OPTIONS</div>
           <div className="hidden">{"Heres an easter egg for you dad >:)"}</div>

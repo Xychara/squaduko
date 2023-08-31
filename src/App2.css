@@ -272,7 +272,22 @@
   z-index: 2;
 }
 
+.check-button {  
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 3px;
+  font-size: 15px;
+  color: grey;
+  z-index: 2;
+}
+
 .options-button:hover { /* while mouse is over a button */
+  background-color: rgba(100, 100, 100,.5);
+  transition: .2s;
+}
+
+.check-button:hover { /* while mouse is over a button */
   background-color: rgba(100, 100, 100,.5);
   transition: .2s;
 }
